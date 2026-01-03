@@ -1,5 +1,10 @@
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
+let
+  gitSigningKeyName = "id_git";
+  gitSigningKeyPath = "${config.home.homeDirectory}/.ssh/${gitSigningKeyName}";
+  pubKeyPath = "${gitSigningKeyPath}.pub";
+in
 {
   # Home Manager needs a bit of information about you and the paths it should
   # manage.
@@ -21,6 +26,7 @@
     # # Adds the 'hello' command to your environment. It prints a friendly
     # # "Hello, world!" when run.
     # pkgs.hello
+
 
     # # It is sometimes useful to fine-tune packages, for example, by applying
     # # overrides. You can do that directly here, just don't forget the
@@ -73,4 +79,30 @@
 
   # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
+
+  programs.git = {
+    enable = true;
+    signing = {
+      key = pubKeyPath;
+      signByDefault = true;
+      format = "ssh";
+    };
+    settings = {
+      core.autocrlf = "input";
+      push.autoSetupRemote = true;
+      user = {
+        name = "smatsuodev";
+        email = "git@smatsuo.dev";
+      };
+    };
+  };
+
+  home.activation.ensureSshKey = lib.hm.dag.entryAfter ["writeBoundary"] ''
+    if [ ! -f "${gitSigningKeyPath}" ]; then
+      mkdir -p ~/.ssh
+      chmod 700 ~/.ssh
+      ${pkgs.openssh}/bin/ssh-keygen -t ed25519 -f "${gitSigningKeyPath}" -N "" -C "generated-by-hm"
+      /usr/bin/ssh-add --apple-use-keychain "${gitSigningKeyPath}"
+    fi
+  '';
 }
