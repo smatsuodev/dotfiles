@@ -16,3 +16,5 @@ echo "Installed: $(mise --version)"
 # Cleanup
 echo "Cleaning up temporary directory: $TMP_DIR"
 rm -rf "$TMP_DIR"
+
+mise install
