@@ -1,8 +1,0 @@
-[settings]
-env_shell_expand = true
-
-[env]
-
-[tools]
-chezmoi = "latest"
-television = "latest"
